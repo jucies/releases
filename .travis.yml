@@ -7,7 +7,7 @@ env:
 script: ./gradlew --info clean generate
 deploy:
   provider: script
-  script: ./gradlew publishGhPages
+  script: ./gradlew --info publishGhPages
   on:
     branch: master
 before_install:
