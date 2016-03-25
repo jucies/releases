@@ -1,0 +1,14 @@
+language: java
+jdk:
+- oraclejdk8
+env:
+  global:
+  - secure: yVqbwypV4TFcSRd0G6GIQtUFEp8O6e69FZck+RGIFKvt/g/QImYsamhmcclN5N+uXELd2fK27WuWjFF1PxHoYmkiaKTExAl8HE7mkoTeKbPkLd3BVoM5Eaaipj5hlqkwolyTcXnTC2awFE4RAQHGHRgzQyWTjBVfTrd2TwR+78lxR3qF/l4JuAyOWJwvsgDVZHV38kiNTSqRoclDa4LeOr62RyfEvk0ZR0FBOI+HN58l0N8LUEl0pD5tIsBqIp4Xv9MbDIssuCmFnN9t5xFE0mxTPYINrXbuSPC//7S00eBlVCN1CRNsih5Xab5gM5SH4uJi3lVGKkhLmQduHVwyP8QjxCHusc4yHa77+eJi9z+1Rt9/auJiSTlS30BoyQIq8Ik3R+7GLmk+sOsLrSFgcqEfsRuRH2BdoT3+eSuc5+zYICyFEdzBUPFXar68Uqe6dumuRjyC+Ww4GPmCp3B57JfpRU9Z3M198apYjFVQpysGbtls6K6hlg+JCE/UeEUTrdnBDlUQJa05cX0mAr3E/wHy/ZVUvvbNGcJapLjy/PS3qw0Wqu2Q06C9OqaEjSQoJLjXKxFjugSx5Sqx2vBZ1UXgsmdHhQiTTAF09+rqlsTJgHWWClywx0IR+L6aXj/DlS/Z9pExEC6m8oLp6FMFJLTcVFzhWZ3ESwbk4F7avnM=
+before_install:
+  - openssl aes-256-cbc -K $encrypted_8cafb51ccccf_key -iv $encrypted_8cafb51ccccf_iv -in uc.key.enc -out uc.key -d
+script: ./gradlew --info clean generate
+deploy:
+  provider: script
+  script: ./gradlew publishGhPages
+  on:
+    branch: master
