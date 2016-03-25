@@ -7,7 +7,7 @@ env:
 script: ./gradlew --info clean generate
 deploy:
   provider: script
-  script: ./gradlew --info publishGhPages
+  script: ./gradlew --debug publishGhPages
   skip_cleanup: true
   on:
     branch: master

@@ -11,6 +11,7 @@ githubPages {
 
     def githubToken = System.getenv('GH_TOKEN')
     if (githubToken) {
+        println "GitHub token is set. Will use it as credentials"
         credentials {
             username = githubToken
             password = ''
