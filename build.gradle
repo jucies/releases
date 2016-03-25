@@ -5,7 +5,7 @@ plugins {
 apply plugin: com.github.jucies.JuciesPlugin
 
 githubPages {
-    repoUri = 'git@github.com:jucies/jucies.github.io.git'
+    repoUri = 'https://github.com/jucies/jucies.github.io.git'
 
     targetBranch = "master"
 
