@@ -8,6 +8,7 @@ script: ./gradlew --info clean generate
 deploy:
   provider: script
   script: ./gradlew --info publishGhPages
+  skip_cleanup: true
   on:
     branch: master
 before_install:
