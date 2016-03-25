@@ -1,0 +1,24 @@
+plugins {
+    id 'org.ajoberstar.github-pages' version '1.4.2'
+}
+
+apply plugin: com.github.jucies.JuciesPlugin
+
+githubPages {
+    repoUri = 'git@github.com:jucies/jucies.github.io.git'
+
+    targetBranch = "master"
+
+    def githubToken = System.getenv('GH_TOKEN')
+    if (githubToken) {
+        credentials {
+            username = githubToken
+            password = ''
+        }
+    }
+
+    pages {
+        from file("uc.crt")
+        from file("build/update-center.json")
+    }
+}

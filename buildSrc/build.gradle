@@ -1,0 +1,12 @@
+apply plugin: 'groovy'
+
+repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.github.yandex-qatools:juseppe:v1.0.0'
+}
