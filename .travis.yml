@@ -10,7 +10,7 @@ env:
 script: ./gradlew --info clean generate
 deploy:
   provider: script
-  script: openssl aes-256-cbc -K $encrypted_8cafb51ccccf_key -iv $encrypted_8cafb51ccccf_iv -in uc.key.enc -out uc.key -d && ./gradlew --info publishGhPages
+  script: ./deploy.sh
   skip_cleanup: true
   on:
     branch: master
