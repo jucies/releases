@@ -35,15 +35,15 @@ class JuciesPlugin implements Plugin<Project> {
         }
 
         project.task("generate") << {
-            def site = new UpdateSite()
-                    .withUpdateCenterVersion(1)
-                    .withId("jucies")
-
-            site.plugins = pluginsConfiguration.resolvedConfiguration.resolvedArtifacts.collect {
-                def identifier = it.moduleVersion.id
-                return HPI.loadHPI(it.file)
-                        .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
-            }
+            def site = new UpdateSite(
+                    id: "jucies",
+                    updateCenterVersion: 1,
+                    plugins: pluginsConfiguration.resolvedConfiguration.resolvedArtifacts.collect {
+                        def identifier = it.moduleVersion.id
+                        return HPI.loadHPI(it.file)
+                                .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
+                    }
+            )
 
             def gson = new GsonBuilder()
                     .registerTypeAdapter(PluginListSerializer.PLUGIN_LIST_TYPE, PluginListSerializer.asUpdateSite())
