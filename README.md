@@ -6,25 +6,11 @@ How much time you think it will take to release a plugin for Jenkins? How many s
 Jucies is based on top of https://jitpack.io - great service to lazily build your Maven/Gradle projects. Also, Jucies acts as an Updates Center for Jenkins, and your users will be notified when you update your plugin to the newer version.
 
 # Quick start (for users)
-First, you must add Jucies to the update sites of your Jenkins. Easiest option would be https://wiki.jenkins-ci.org/display/JENKINS/UpdateSites+Manager+plugin.
-
-1. Install UpdateSites Manager plugin
-1. Go to `Manage Jenkins -> Manage UpdateSites`
-1. Press `Add`
-1. Fill fields like this:
-
-    | Field               | Value                                                                           |
-    |---------------------|---------------------------------------------------------------------------------|
-    | ID                  | jucies                                                                          |
-    | URL                 | https://jucies.github.io/update-center.json                                     |
-    | Note                | any text                                 |
-    | Need CA Certificate | yes                                                                             |
-    | CA Certificate      | Use content of this file: https://github.com/jucies/releases/blob/master/uc.crt |
-1. Press "Save"
-1. Go to `Manage Jenkins -> Manage Plugins -> Advanced`
+1. Install Jucies Plugin: http://wiki.jenkins-ci.org/display/JENKINS/Jucies+Plugin
+1. Open `Plugin Manager -> Advanced` and verify that Jucies appears in "Other Sites" section.
 1. Press "Check now"
 
-We're done now! Any plugin available on Jucies should appear on "available" tab of `Manage Plugins` page. Just install it as any other Jenkins Plugin.
+Any plugin available on Jucies should appear on "available" tab of `Manage Plugins` page. Just install it as any other Jenkins Plugin.
 
 # Quick start (for plugin developers)
 Jucies was created to make it deadly-simple to share your plugins. And so it is!
