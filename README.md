@@ -10,6 +10,8 @@ Jucies is based on top of https://jitpack.io - great service to lazily build you
 1. Open `Plugin Manager -> Advanced` and verify that Jucies appears in "Other Sites" section.
 1. Press "Check now"
 
+**NB:** verify that installed version is at least 0.1.1. If not - go to "Updates" and update your plugin to 0.1.1 or higher.
+
 Any plugin available on Jucies should appear on "available" tab of `Manage Plugins` page. Just install it as any other Jenkins Plugin.
 
 # Quick start (for plugin developers)
