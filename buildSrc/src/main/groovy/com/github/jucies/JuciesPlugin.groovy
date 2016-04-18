@@ -7,7 +7,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import ru.lanwen.jenkins.juseppe.beans.UpdateSite
 import ru.lanwen.jenkins.juseppe.gen.HPI
-import ru.lanwen.jenkins.juseppe.gen.Signer
 import ru.lanwen.jenkins.juseppe.util.PluginListSerializer
 
 @CompileStatic
@@ -30,24 +29,21 @@ class JuciesPlugin implements Plugin<Project> {
 
         project.file("plugins").eachFile {
             def properties = new Properties()
-            properties.load(it.newInputStream())
+            it.withInputStream(properties.&load)
 
             project.dependencies.add(pluginsConfiguration.name, "${properties.groupId}:${properties.artifactId}:${properties.version}")
         }
 
         project.task("generate") << {
-            def site = new UpdateSite()
-                    .withUpdateCenterVersion(1)
-                    .withId("jucies")
-
-            def plugins = pluginsConfiguration.resolvedConfiguration.resolvedArtifacts.collect {
-                def identifier = it.moduleVersion.id
-                return HPI.loadHPI(it.file)
-                        .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
-            }
-            site.plugins.addAll(plugins)
-
-            site.signature = new Signer().sign(site)
+            def site = new UpdateSite(
+                    id: "jucies",
+                    updateCenterVersion: 1,
+                    plugins: pluginsConfiguration.resolvedConfiguration.resolvedArtifacts.collect {
+                        def identifier = it.moduleVersion.id
+                        return HPI.loadHPI(it.file)
+                                .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
+                    }
+            )
 
             def gson = new GsonBuilder()
                     .registerTypeAdapter(PluginListSerializer.PLUGIN_LIST_TYPE, PluginListSerializer.asUpdateSite())
