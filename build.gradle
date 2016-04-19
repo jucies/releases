@@ -1,8 +1,68 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+
+    dependencies {
+        classpath 'com.github.yandex-qatools:juseppe:v1.0.0'
+    }
+}
+
 plugins {
+    id "base"
     id 'org.ajoberstar.github-pages' version '1.4.2'
 }
 
-apply plugin: com.github.jucies.JuciesPlugin
+repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+    maven { url "http://repo.jenkins-ci.org/public/" }
+}
+
+configurations {
+    plugin {
+        transitive = false
+    }
+}
+
+file("plugins").eachFile {
+    def properties = new Properties()
+    it.withInputStream(properties.&load)
+
+    dependencies.add("plugin", "${properties.groupId}:${properties.artifactId}:${properties.version}")
+}
+
+import ru.lanwen.jenkins.juseppe.beans.UpdateSite
+import ru.lanwen.jenkins.juseppe.gen.HPI
+import ru.lanwen.jenkins.juseppe.util.PluginListSerializer
+import com.google.gson.GsonBuilder
+
+task generate << {
+    def site = new UpdateSite(
+            id: "jucies",
+            updateCenterVersion: 1,
+            plugins: configurations.plugin.resolvedConfiguration.resolvedArtifacts.collect {
+                def identifier = it.moduleVersion.id
+                return HPI.loadHPI(it.file)
+                        .withVersion(identifier.version)
+                        .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
+            }
+    )
+
+    def gson = new GsonBuilder()
+            .registerTypeAdapter(PluginListSerializer.PLUGIN_LIST_TYPE, PluginListSerializer.asUpdateSite())
+            .disableHtmlEscaping()
+            .create()
+
+    def result = String.format("updateCenter.post(%n%s%n);", gson.toJson(site))
+
+    def targetFile = project.file("${project.buildDir}/update-center.json")
+    targetFile.parentFile.mkdirs()
+    targetFile.delete()
+
+    targetFile << result
+}
 
 githubPages {
     repoUri = 'https://github.com/jucies/jucies.github.io.git'
@@ -19,7 +79,6 @@ githubPages {
     }
 
     pages {
-        from file("uc.crt")
         from file("build/update-center.json")
     }
 }
