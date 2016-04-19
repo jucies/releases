@@ -7,10 +7,10 @@ jdk:
 env:
   global:
     secure: kK5PaF7wDZ4eJf/H8ISMlPOflN1d4lAQVr4/9eHwWHbXKLEzXCiAUXI22pMY0eWdk0qTBo1Fl5f2wsCuhVZZdF67VnN0tFtDxfB2gHzDHFWq8aXytEXWH1Ckp5ZSnR1tXL3LOMVgO4fxAVP12CZ2g0CFQO8tff1fNWg6sLSYN4Q1YNhc4zY02UchnAdUgHEA5DVEt6Hd76VVwtytW4Svc95dqppV4hxlhgcN/hC3RRmJyVKlZDRPnXFBlPQpEbnQziyz8MD3ukgkAbddDIrYghZLw+ZjM1L0ne5InBX9X/q5/ohYmywfwYzz1yEPSekjUYEJlx+8Hq8DbIiUFfb+rXhpWUGEZw2UJMbR9eWwsIy3wqXI8hArDpSeghbTir4VCc8uEvWxTRmHFuhDl+93BGrbFVE+kbXIYU0VwtDoYVSMPVakUONLCbhO3nbo+m2W8dpWvwJcnZy2O3w7shWYF6ZCMmqCuGBhWeKwWShXTDccRolcGzYTtm2GPtjrV0Cjw5DuSdMOjtpkbjyDnFb2plySOLrromIC3B/rjt1XQTfh/NfFGBD1OZVksUkSDNWPZBn5YjGK+45bBU+f+ZKL4kSmL+VgaXT6MYai+2v/dUfCPI8ICzNJPcAqZlNbkDeB9mVHYL1Mr4/gjl2RbP4Sl2nTK8FCgRWK/qj1XZPNZ98=
-script: ./gradlew --info clean generate
+script: gradle --info clean generate
 deploy:
   provider: script
-  script: ./gradlew --info publishGhPages
+  script: gradle --info publishGhPages
   skip_cleanup: true
   on:
     branch: master
