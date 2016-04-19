@@ -26,11 +26,16 @@ configurations {
     }
 }
 
+def gavToId = [:]
+
 file("plugins").eachFile {
     def properties = new Properties()
     it.withInputStream(properties.&load)
 
-    dependencies.add("plugin", "${properties.groupId}:${properties.artifactId}:${properties.version}")
+    def gav = "${properties.groupId}:${properties.artifactId}:${properties.version}"
+    dependencies.add("plugin", gav)
+    
+    gavToId[gav] = it.name - '.properties'
 }
 
 import ru.lanwen.jenkins.juseppe.beans.UpdateSite
@@ -44,7 +49,11 @@ task generate << {
             updateCenterVersion: 1,
             plugins: configurations.plugin.resolvedConfiguration.resolvedArtifacts.collect {
                 def identifier = it.moduleVersion.id
+                
+                def gav = "${identifier.group}:${identifier.name}:${identifier.version}"
+                
                 return HPI.loadHPI(it.file)
+                        .withName(gavToId[gav])
                         .withVersion(identifier.version)
                         .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
             }
