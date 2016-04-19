@@ -41,6 +41,7 @@ class JuciesPlugin implements Plugin<Project> {
                     plugins: pluginsConfiguration.resolvedConfiguration.resolvedArtifacts.collect {
                         def identifier = it.moduleVersion.id
                         return HPI.loadHPI(it.file)
+                                .withVersion(identifier.version)
                                 .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
                     }
             )
