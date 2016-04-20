@@ -32,13 +32,13 @@ Then, go to https://github.com/jucies/releases and open Pull Request with 1 sing
 File should contain these lines:
 ```properties
 repository = your-github-id/repository-of-your-plugin
-version = v0.1.0
+version = 0.1.0
 ```
 
 Where:
 * **your-github-id** - your login on GitHub.
 * **repository-of-your-plugin** - name of the repository of the plugin you created.
-* **version** - tag you used for the release.
+* **version** - tag you used for the release (try using the semantic version as a tag).
 
 Done! Now, once PR is accepted, you will see your plugin available in Jucies update center.
 
