@@ -27,11 +27,11 @@ First, create a Release on GitHub: https://help.github.com/articles/creating-rel
 
 **NB:** there is no need to attach any binaries to the release. Basically, only tag is required.
 
-Then, go to https://github.com/jucies/releases and open Pull Request with 1 single file:
-`plugins/your-plugin-name.properties`, where `your-plugin-name` is a name of your plugin (the same as specified in your `pom.xml` file). File should contain these lines:
+Then, go to https://github.com/jucies/releases and open Pull Request with 1 single file: `plugins/your-plugin-name.properties`.
+
+File should contain these lines:
 ```properties
-groupId = com.github.your-github-id
-artifactId = repository-of-your-plugin
+repository = your-github-id/repository-of-your-plugin
 version = v0.1.0
 ```
 

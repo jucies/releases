@@ -29,10 +29,28 @@ configurations {
 def gavToId = [:]
 
 file("plugins").eachFile {
+    if (!it.name.endsWith(".properties")) {
+        throw new GradleException("'.properties' file extension was expected, but got: ${it}")
+    }
+
     def properties = new Properties()
     it.withInputStream(properties.&load)
 
-    def gav = "${properties.groupId}:${properties.artifactId}:${properties.version}"
+    def parts = (properties.repository as String)?.split("/", 2)
+
+    if (parts?.length != 2) {
+        throw new GradleException("Wrong format of 'repository' property! 'org/repo' was expected, but got '${properties.repository}' in ${it}")
+    }
+
+    def groupId = "com.github.${parts[0]}"
+    def artifactId = parts[1]
+
+    def version = properties.version
+    if (!version?.trim()) {
+        throw new GradleException("'version' property can't be empty, but it is so in ${it}")
+    }
+
+    def gav = "${groupId}:${artifactId}:${version}"
     dependencies.add("plugin", gav)
     
     gavToId[gav] = it.name - '.properties'
