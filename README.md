@@ -14,6 +14,9 @@ Jucies is based on top of https://jitpack.io - great service to lazily build you
 
 Any plugin available on Jucies should appear on "available" tab of `Manage Plugins` page. Just install it as any other Jenkins Plugin.
 
+Alternatively, you can download the latest build of plugin from here:
+https://jitpack.io/com/github/jucies/jucies-plugin/master-SNAPSHOT/jucies-plugin-master-SNAPSHOT.hpi
+
 # Quick start (for plugin developers)
 Jucies was created to make it deadly-simple to share your plugins. And so it is!
 
