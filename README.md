@@ -1,4 +1,5 @@
-# Jucies - Jenkins Update Center on GitHub (beta)
+# Jucies - Alternative Jenkins Update Center on GitHub (beta)
+[![Build Status](https://travis-ci.org/jucies/releases.svg?branch=master)](https://travis-ci.org/jucies/releases)
 ## What is it?
 How much time you think it will take to release a plugin for Jenkins? How many steps you will have to perform? With Jucies it's damn simple - just create a tag (release) on GitHub, send/update Pull Request to make it published - and it's done! It's not even required to build `*.hpi` file yourself!
 
