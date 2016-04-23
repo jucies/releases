@@ -45,7 +45,7 @@ file("plugins").eachFile {
     def groupId = "com.github.${parts[0]}"
     def artifactId = parts[1]
 
-    def version = properties.version
+    def version = properties.tag ?: properties.version
     if (!version?.trim()) {
         throw new GradleException("'version' property can't be empty, but it is so in ${it}")
     }
@@ -53,7 +53,10 @@ file("plugins").eachFile {
     def gav = "${groupId}:${artifactId}:${version}"
     dependencies.add("plugin", gav)
     
-    gavToId[gav] = it.name - '.properties'
+    gavToId[gav] = [
+            name: it.name - '.properties',
+            properties: properties
+    ]
 }
 
 import ru.lanwen.jenkins.juseppe.beans.UpdateSite
@@ -69,10 +72,12 @@ task generate << {
                 def identifier = it.moduleVersion.id
                 
                 def gav = "${identifier.group}:${identifier.name}:${identifier.version}"
-                
+
+                def desc = gavToId[gav]
+
                 return HPI.loadHPI(it.file)
-                        .withName(gavToId[gav])
-                        .withVersion(identifier.version)
+                        .withName(desc.name)
+                        .withVersion(desc.properties.version)
                         .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
             }
     )

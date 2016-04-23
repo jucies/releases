@@ -43,5 +43,12 @@ Where:
 
 Done! Now, once PR is accepted, you will see your plugin available in Jucies update center.
 
+**Hint:** if your tag looks like "your-plugin-name-1.2.3", but you want to release version "1.2.3", just use additional optional `tag` property:
+```properties
+repository = your-github-id/repository-of-your-plugin
+tag = your-plugin-name-0.1.0
+version = 0.1.0
+```
+
 ## Releasing new version
 To release new version, just send another PR where you change `version` property.
