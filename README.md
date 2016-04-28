@@ -26,29 +26,32 @@ https://github.com/jucies/maven-example-plugin
 
 First, create a Release on GitHub: https://help.github.com/articles/creating-releases/
 
-**NB:** there is no need to attach any binaries to the release. Basically, only tag is required.
+**NB:** there is no need to attach any binaries to the release.
 
 Then, go to https://github.com/jucies/releases and open Pull Request with 1 single file: `plugins/your-plugin-name.properties`.
 
 File should contain these lines:
 ```properties
 repository = your-github-id/repository-of-your-plugin
-version = 0.1.0
 ```
 
 Where:
 * **your-github-id** - your login on GitHub.
 * **repository-of-your-plugin** - name of the repository of the plugin you created.
-* **version** - tag you used for the release (try using the semantic version as a tag).
 
 Done! Now, once PR is accepted, you will see your plugin available in Jucies update center.
 
-**Hint:** if your tag looks like "your-plugin-name-1.2.3", but you want to release version "1.2.3", just use additional optional `tag` property:
+
+**Hint:** Optionally, you can force Jucies to use a concrete tag and version:
 ```properties
 repository = your-github-id/repository-of-your-plugin
 tag = your-plugin-name-0.1.0
 version = 0.1.0
 ```
 
+Where:
+* **version** - tag you used for the release (try using the semantic version as a tag).
+* (optional) tag - git tag for this release.
+
 ## Releasing new version
-To release new version, just send another PR where you change `version` property.
+To release new version, just create a new release on GitHub - that's it!
