@@ -6,6 +6,7 @@ buildscript {
 
     dependencies {
         classpath 'com.github.yandex-qatools:juseppe:v1.0.0'
+        classpath 'com.vdurmont:semver4j:2.0.1'
     }
 }
 
@@ -17,12 +18,24 @@ plugins {
 repositories {
     jcenter()
     maven { url "https://jitpack.io" }
-    maven { url "http://repo.jenkins-ci.org/public/" }
 }
 
 configurations {
     plugin {
         transitive = false
+    }
+}
+
+def githubToken = System.getenv('GH_TOKEN')
+
+void logErrorOrFail(text) {
+    def pullRequestEnv = System.getenv("TRAVIS_PULL_REQUEST")
+    def isMasterBuild = !pullRequestEnv || "false".equalsIgnoreCase(pullRequestEnv)
+
+    if (isMasterBuild) {
+        services.get(org.gradle.logging.StyledTextOutputFactory).create("Jucies").withStyle(org.gradle.logging.StyledTextOutput.Style.Failure).println(text)
+    } else {
+        throw new GradleException(text)
     }
 }
 
@@ -36,26 +49,54 @@ file("plugins").eachFile {
     def properties = new Properties()
     it.withInputStream(properties.&load)
 
-    def parts = (properties.repository as String)?.split("/", 2)
+    def repository = properties.repository as String
+    def parts = repository?.split("/", 2)
 
     if (parts?.length != 2) {
-        throw new GradleException("Wrong format of 'repository' property! 'org/repo' was expected, but got '${properties.repository}' in ${it}")
+        throw new GradleException("Wrong format of 'repository' property! 'org/repo' was expected, but got '${repository}' in ${it}")
     }
 
     def groupId = "com.github.${parts[0]}"
     def artifactId = parts[1]
 
-    def version = properties.tag ?: properties.version
+    final def version
+    final def tag
+    if (properties.version) {
+        version = properties.version
+        tag = properties.tag ?: version
+    } else {
+        if (properties.tag) {
+            throw new GradleException("'tag' property must not be used without 'version' property.")
+        }
+
+        try {
+            def latestRelease = new groovy.json.JsonSlurper().parse("https://api.github.com/repos/${repository}/releases/latest${githubToken ? "?access_token=${githubToken}" : ""}".toURL())
+            version = tag = latestRelease.tag_name
+
+            logger.info("Latest release of {}: {}", repository, version)
+        } catch (Exception e) {
+            logErrorOrFail("Failed to get the latest release of ${repository}")
+            return;
+        }
+    }
+
     if (!version?.trim()) {
         throw new GradleException("'version' property can't be empty, but it is so in ${it}")
     }
 
-    def gav = "${groupId}:${artifactId}:${version}"
+    try {
+        new com.vdurmont.semver4j.Semver(version, com.vdurmont.semver4j.Semver.SemverType.LOOSE);
+    } catch (com.vdurmont.semver4j.SemverException e) {
+        logErrorOrFail("${repository} has non-semantic version: ${e.message}")
+        return;
+    }
+
+    def gav = "${groupId}:${artifactId}:${tag}"
     dependencies.add("plugin", gav)
-    
+
     gavToId[gav] = [
             name: it.name - '.properties',
-            properties: properties
+            version: version
     ]
 }
 
@@ -64,20 +105,21 @@ import ru.lanwen.jenkins.juseppe.gen.HPI
 import ru.lanwen.jenkins.juseppe.util.PluginListSerializer
 import com.google.gson.GsonBuilder
 
+def updateCenterFile = project.file("${project.buildDir}/update-center.json")
 task generate << {
     def site = new UpdateSite(
             id: "jucies",
             updateCenterVersion: 1,
             plugins: configurations.plugin.resolvedConfiguration.resolvedArtifacts.collect {
                 def identifier = it.moduleVersion.id
-                
+
                 def gav = "${identifier.group}:${identifier.name}:${identifier.version}"
 
                 def desc = gavToId[gav]
 
                 return HPI.loadHPI(it.file)
                         .withName(desc.name)
-                        .withVersion(desc.properties.version)
+                        .withVersion(desc.version)
                         .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
             }
     )
@@ -89,11 +131,10 @@ task generate << {
 
     def result = String.format("updateCenter.post(%n%s%n);", gson.toJson(site))
 
-    def targetFile = project.file("${project.buildDir}/update-center.json")
-    targetFile.parentFile.mkdirs()
-    targetFile.delete()
+    updateCenterFile.parentFile.mkdirs()
+    updateCenterFile.delete()
 
-    targetFile << result
+    updateCenterFile << result
 }
 
 githubPages {
@@ -101,7 +142,6 @@ githubPages {
 
     targetBranch = "master"
 
-    def githubToken = System.getenv('GH_TOKEN')
     if (githubToken) {
         println "GitHub token is set. Will use it as credentials"
         credentials {
@@ -111,6 +151,6 @@ githubPages {
     }
 
     pages {
-        from file("build/update-center.json")
+        from updateCenterFile
     }
 }
