@@ -59,11 +59,15 @@ file("plugins").eachFile {
     def groupId = "com.github.${parts[0]}"
     def artifactId = parts[1]
 
-    final def version
-    final def tag
+    def pluginId = it.name - '.properties'
+
+    final String version
+    final String tag
+    final String note
     if (properties.version) {
         version = properties.version
         tag = properties.tag ?: version
+        note = ''
     } else {
         if (properties.tag) {
             throw new GradleException("'tag' property must not be used without 'version' property.")
@@ -72,6 +76,13 @@ file("plugins").eachFile {
         try {
             def latestRelease = new groovy.json.JsonSlurper().parse("https://api.github.com/repos/${repository}/releases/latest${githubToken ? "?access_token=${githubToken}" : ""}".toURL())
             version = tag = latestRelease.tag_name
+
+            def pluginPrefix = "${pluginId}-"
+            if (version.startsWith(pluginPrefix)) {
+                version = version.substring(pluginPrefix.length())
+            }
+
+            note = latestRelease.body
 
             logger.info("Latest release of {}: {}", repository, version)
         } catch (Exception e) {
@@ -95,8 +106,9 @@ file("plugins").eachFile {
     dependencies.add("plugin", gav)
 
     gavToId[gav] = [
-            name: it.name - '.properties',
-            version: version
+            name: pluginId,
+            version: version,
+            note: note
     ]
 }
 
@@ -120,6 +132,7 @@ task generate << {
                 return HPI.loadHPI(it.file)
                         .withName(desc.name)
                         .withVersion(desc.version)
+                        .withExcerpt(desc.note)
                         .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
             }
     )
