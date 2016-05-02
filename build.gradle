@@ -61,7 +61,7 @@ file("plugins").eachFile {
 
     def pluginId = it.name - '.properties'
 
-    final String version
+    String version
     final String tag
     final String note
     if (properties.version) {
@@ -80,6 +80,10 @@ file("plugins").eachFile {
             def pluginPrefix = "${pluginId}-"
             if (version.startsWith(pluginPrefix)) {
                 version = version.substring(pluginPrefix.length())
+            }
+
+            if (version.startsWith("v")) {
+                version = version.substring(1)
             }
 
             note = latestRelease.body
