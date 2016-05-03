@@ -116,7 +116,11 @@ file("plugins").eachFile {
     ]
 }
 
+
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializer
 import ru.lanwen.jenkins.juseppe.beans.UpdateSite
+import ru.lanwen.jenkins.juseppe.beans.Plugin
 import ru.lanwen.jenkins.juseppe.gen.HPI
 import ru.lanwen.jenkins.juseppe.util.PluginListSerializer
 import com.google.gson.GsonBuilder
@@ -141,9 +145,17 @@ task generate << {
             }
     )
 
+    JsonSerializer<List<Plugin>> pluginListSerializer = { plugins, type, context ->
+        return plugins.sort { it.name }.inject(new JsonObject()) { result, plugin ->
+            result.add(plugin.name, context.serialize(plugin))
+            return result
+        }
+    }
+
     def gson = new GsonBuilder()
-            .registerTypeAdapter(PluginListSerializer.PLUGIN_LIST_TYPE, PluginListSerializer.asUpdateSite())
+            .registerTypeAdapter(PluginListSerializer.PLUGIN_LIST_TYPE, pluginListSerializer)
             .disableHtmlEscaping()
+            .setPrettyPrinting()
             .create()
 
     def result = String.format("updateCenter.post(%n%s%n);", gson.toJson(site))
