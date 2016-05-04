@@ -165,6 +165,8 @@ githubPages {
 
     targetBranch = "master"
 
+    deleteExistingFiles = false
+
     if (githubToken) {
         println "GitHub token is set. Will use it as credentials"
         credentials {
