@@ -63,11 +63,9 @@ file("plugins").eachFile {
 
     String version
     final String tag
-    final String note
     if (properties.version) {
         version = properties.version
         tag = properties.tag ?: version
-        note = ''
     } else {
         if (properties.tag) {
             throw new GradleException("'tag' property must not be used without 'version' property.")
@@ -85,8 +83,6 @@ file("plugins").eachFile {
             if (version.startsWith("v")) {
                 version = version.substring(1)
             }
-
-            note = latestRelease.body
 
             logger.info("Latest release of {}: {}", repository, version)
         } catch (Exception e) {
@@ -111,8 +107,7 @@ file("plugins").eachFile {
 
     gavToId[gav] = [
             name: pluginId,
-            version: version,
-            note: note
+            version: version
     ]
 }
 
@@ -140,7 +135,6 @@ task generate << {
                 return HPI.loadHPI(it.file)
                         .withName(desc.name)
                         .withVersion(desc.version)
-                        .withExcerpt(desc.note)
                         .withUrl("https://jitpack.io/${identifier.group.replace(".", "/")}/${identifier.name}/${identifier.version}/${identifier.name}-${identifier.version}.hpi")
             }
     )
