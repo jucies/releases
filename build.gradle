@@ -195,5 +195,3 @@ task publishGhPages << {
         }
     }
 }
-
-publishGhPages.dependsOn generate
