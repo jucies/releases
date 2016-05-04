@@ -7,12 +7,12 @@ buildscript {
     dependencies {
         classpath 'com.github.yandex-qatools:juseppe:v1.0.0'
         classpath 'com.vdurmont:semver4j:2.0.1'
+        classpath 'org.ajoberstar:grgit:1.6.0'
     }
 }
 
 plugins {
     id "base"
-    id 'org.ajoberstar.github-pages' version '1.4.2'
 }
 
 repositories {
@@ -114,13 +114,15 @@ file("plugins").eachFile {
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializer
+import org.ajoberstar.grgit.Grgit
 import ru.lanwen.jenkins.juseppe.beans.UpdateSite
 import ru.lanwen.jenkins.juseppe.beans.Plugin
 import ru.lanwen.jenkins.juseppe.gen.HPI
 import ru.lanwen.jenkins.juseppe.util.PluginListSerializer
 import com.google.gson.GsonBuilder
 
-def updateCenterFile = project.file("${project.buildDir}/update-center.json")
+def updateCenterFileName = "update-center.json"
+def updateCenterFile = project.file("${project.buildDir}/${updateCenterFileName}")
 task generate << {
     def site = new UpdateSite(
             id: "jucies",
@@ -160,22 +162,38 @@ task generate << {
     updateCenterFile << result
 }
 
-githubPages {
-    repoUri = 'https://github.com/jucies/jucies.github.io.git'
+task publishGhPages << {
+    def dir = "${project.buildDir}/ghpages"
 
-    targetBranch = "master"
+    file(dir).deleteDir()
 
-    deleteExistingFiles = false
-
+    final def credentials
     if (githubToken) {
         println "GitHub token is set. Will use it as credentials"
-        credentials {
-            username = githubToken
-            password = ''
-        }
+        credentials = new org.ajoberstar.grgit.Credentials(githubToken, '')
+    } else {
+        credentials = null
     }
 
-    pages {
+    def repo = Grgit.clone(
+            uri: 'https://github.com/jucies/jucies.github.io.git',
+            refToCheckout: 'master',
+            dir: dir,
+            credentials: credentials
+    )
+
+    project.copy {
         from updateCenterFile
+        into dir
+    }
+
+    repo.with {
+        if (!status().isClean()) {
+            println "Commiting changes..."
+            commit(message: "Publish of Github pages from Gradle.", paths: [updateCenterFileName])
+            push()
+        }
     }
 }
+
+publishGhPages.dependsOn generate
