@@ -41,8 +41,13 @@ Where:
 
 Done! Now, once PR is accepted, you will see your plugin available in Jucies update center.
 
+**Hint1:** if you use submodules, you can point Jucies to the module:
+```properties
+repository = your-github-id/repository-of-your-plugin
+module = sub-module
+```
 
-**Hint:** Optionally, you can force Jucies to use a concrete tag and version:
+**Hint2:** you can force Jucies to use a concrete tag and version:
 ```properties
 repository = your-github-id/repository-of-your-plugin
 tag = your-plugin-name-0.1.0
