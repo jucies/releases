@@ -18,6 +18,7 @@ plugins {
 repositories {
     jcenter()
     maven { url "https://jitpack.io" }
+    maven { url "https://repo.jenkins-ci.org/public" }
 }
 
 configurations {
@@ -50,14 +51,23 @@ file("plugins").eachFile {
     it.withInputStream(properties.&load)
 
     def repository = properties.repository as String
+    def module = properties.module
     def parts = repository?.split("/", 2)
 
     if (parts?.length != 2) {
         throw new GradleException("Wrong format of 'repository' property! 'org/repo' was expected, but got '${repository}' in ${it}")
     }
 
-    def groupId = "com.github.${parts[0]}"
-    def artifactId = parts[1]
+    final def groupId
+    final def artifactId
+
+    if (module) {
+        groupId = "com.github.${parts[0]}.${parts[1]}"
+        artifactId = module
+    } else {
+        groupId = "com.github.${parts[0]}"
+        artifactId = parts[1]
+    }
 
     def pluginId = it.name - '.properties'
 
