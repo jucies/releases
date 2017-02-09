@@ -40,8 +40,9 @@ void logErrorOrFail(text) {
     }
 }
 
-def gavToId = [:]
+def pluginsById = [:]
 
+// Index plugins
 file("plugins").eachFile {
     if (!it.name.endsWith(".properties")) {
         throw new GradleException("'.properties' file extension was expected, but got: ${it}")
@@ -61,66 +62,138 @@ file("plugins").eachFile {
     final def groupId
     final def artifactId
 
+    def owner = parts[0]
+    def repoName = parts[1]
     if (module) {
-        groupId = "com.github.${parts[0]}.${parts[1]}"
+        groupId = "com.github.${owner}.${repoName}"
         artifactId = module
     } else {
-        groupId = "com.github.${parts[0]}"
-        artifactId = parts[1]
+        groupId = "com.github.${owner}"
+        artifactId = repoName
     }
 
     def pluginId = it.name - '.properties'
 
-    String version
-    final String tag
-    if (properties.version) {
-        version = properties.version
-        tag = properties.tag ?: version
-    } else {
-        if (properties.tag) {
-            throw new GradleException("'tag' property must not be used without 'version' property.")
-        }
-
-        try {
-            def latestRelease = new groovy.json.JsonSlurper().parse("https://api.github.com/repos/${repository}/releases/latest${githubToken ? "?access_token=${githubToken}" : ""}".toURL())
-            version = tag = latestRelease.tag_name
-
-            def pluginPrefix = "${pluginId}-"
-            if (version.startsWith(pluginPrefix)) {
-                version = version.substring(pluginPrefix.length())
-            }
-
-            if (version.startsWith("v")) {
-                version = version.substring(1)
-            }
-
-            logger.info("Latest release of {}: {}", repository, version)
-        } catch (Exception e) {
-            logErrorOrFail("Failed to get the latest release of ${repository}")
-            return;
-        }
+    if (!properties.version && properties.tag) {
+        throw new GradleException("'tag' property must not be used without 'version' property.")
     }
 
+    String version = properties.version
+    String tag = properties.tag ?: version
+
+    pluginsById[pluginId] = [
+            name: pluginId,
+            version: version,
+            tag    : tag,
+            repository: repository,
+            groupId: groupId,
+            artifactId: artifactId,
+            owner: owner,
+            repoName: repoName
+    ]
+}
+
+// Resolve version/tag if not set
+if (githubToken) {
+    def queryIdCounter = 0
+    def queryIdToDescription = pluginsById.values().findAll { !it.version }.collectEntries {
+        ["i${queryIdCounter++}".toString(), it]
+    }
+
+    def queryText = '''
+fragment latestReleaseTag on Repository {
+  releases(last: 1) {
+    edges {
+      node {
+        tag {
+          name
+        }
+      }
+    }
+  }
+}
+{
+'''
+
+    queryIdToDescription.forEach { queryId, description ->
+        queryText += """
+    ${queryId}:repository(owner: "${description.owner}", name: "${description.repoName}") { ...latestReleaseTag }
+"""
+    }
+
+    queryText += "}"
+
+    def baseUrl = new URL("https://api.github.com/graphql?access_token=${githubToken}")
+    def connection = baseUrl.openConnection()
+    connection.with {
+        doOutput = true
+        requestMethod = 'POST'
+        outputStream.withWriter { writer ->
+            writer << (new groovy.json.JsonBuilder(query: queryText)).toString()
+        }
+        def result = new groovy.json.JsonSlurper().parseText(content.text)
+
+        result.data.forEach { queryId, releaseInfo ->
+            def description = queryIdToDescription[queryId]
+            description.version = description.tag = releaseInfo?.releases?.edges?.first()?.node?.tag?.name
+        }
+    }
+} else {
+    pluginsById.each { pluginId, description ->
+        def repository = description.repository
+
+        if (!description.version) {
+            try {
+                def latestRelease = new groovy.json.JsonSlurper().parse("https://api.github.com/repos/${repository}/releases/latest".toURL())
+                description.version = description.tag = latestRelease.tag_name
+            } catch (Exception e) {
+                logErrorOrFail("Failed to get the latest release of ${repository}")
+                return
+            }
+        }
+    }
+}
+
+pluginsById.each { pluginId, description ->
+    def version = description.version
+    def repository = description.repository
+
+    def pluginPrefix = "${pluginId}-"
+    if (version.startsWith(pluginPrefix)) {
+        version = version.substring(pluginPrefix.length())
+    }
+
+    if (version.startsWith("v")) {
+        version = version.substring(1)
+    }
+
+    logger.info("Latest release of {}: {}", repository, version)
+
+    description.version = version
+}
+
+// Validate versions
+pluginsById.each { pluginId, description ->
+    def version = description.version
+
     if (!version?.trim()) {
-        throw new GradleException("'version' property can't be empty, but it is so in ${it}")
+        throw new GradleException("'version' property can't be empty, but it is so in ${pluginId}")
     }
 
     try {
         new com.vdurmont.semver4j.Semver(version, com.vdurmont.semver4j.Semver.SemverType.LOOSE);
     } catch (com.vdurmont.semver4j.SemverException e) {
-        logErrorOrFail("${repository} has non-semantic version: ${e.message}")
-        return;
+        logErrorOrFail("${description.repository} has non-semantic version: ${e.message}")
+        return
     }
-
-    def gav = "${groupId}:${artifactId}:${tag}"
-    dependencies.add("plugin", gav)
-
-    gavToId[gav] = [
-            name: pluginId,
-            version: version
-    ]
 }
 
+def gavToId = [:]
+pluginsById.each { pluginId, description ->
+    gavToId["${description.groupId}:${description.artifactId}:${description.tag}".toString()] = pluginId
+}
+
+gavToId.each { gav, description -> dependencies.add("plugin", gav) }
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializer
@@ -142,7 +215,7 @@ task generate << {
 
                 def gav = "${identifier.group}:${identifier.name}:${identifier.version}"
 
-                def desc = gavToId[gav]
+                def desc = pluginsById[gavToId[gav.toString()].toString()]
 
                 return HPI.loadHPI(it.file)
                         .withName(desc.name)
